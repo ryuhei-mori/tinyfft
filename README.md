@@ -1,5 +1,5 @@
 # Tiny FFT
-A tiny implementation of Fast Fourier Transform for sizes power of 2
+A tiny implementation of the fast Fourier transform for sizes power of 2
 
     clang -O3 tinyfft.c -c
 
@@ -7,7 +7,7 @@ A tiny implementation of Fast Fourier Transform for sizes power of 2
 
     void init(int k, double complex *w);
 
-A table w of twiddle factors is initialized for FFT of length 2^k.
+A table w of twiddle factors is initialized for FFT of length 2^k. The size of table is 2^(k-1).
 
     void fft(int k, double complex *x, const double complex *w);
 
