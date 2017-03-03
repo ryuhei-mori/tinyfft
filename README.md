@@ -7,7 +7,7 @@ A tiny implementation of Fast Fourier Transform for sizes power of 2
 
     void init(int k, double complex *w);
 
-Initializing a table w of twiddle factors for FFT of length 2^k.
+A table w of twiddle factors is initialized for FFT of length 2^k.
 
     void fft(int k, double complex *x, const double complex *w);
 
