@@ -2,6 +2,7 @@
 A tiny implementation of the fast Fourier transform for sizes power of 2
 
     clang -O3 tinyfft.c -c
+    clang -O3 example.c tinyfft.o -lm
 
 ## List of provided functions
 
