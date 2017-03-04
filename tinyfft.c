@@ -14,7 +14,7 @@ void fft(int k, cmplx *A, const cmplx *w){
     for(jh=0;jh<u;jh++){
       cmplx wj = w[jh];
       int j, je;
-      for(j=jh<<i, je=j|v; j<je; j++){
+      for(j=jh<<i, je=j+v; j<je; j++){
         cmplx Ajv = wj * A[j|v];
         A[j|v] = A[j] - Ajv;
         A[j] += Ajv;
@@ -35,7 +35,7 @@ void ifft(int k, cmplx *A, const cmplx *w){
     for(jh=0;jh<u;jh++){
       cmplx wj = conj(w[jh]);
       int j, je;
-      for(j=jh<<i, je=j|v; j<je; j++){
+      for(j=jh<<i, je=j+v; j<je; j++){
         cmplx Ajv = A[j] - A[j|v];
         A[j] += A[j|v];
         A[j|v] = wj * Ajv;
