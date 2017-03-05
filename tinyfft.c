@@ -30,8 +30,8 @@ void fft(int k, cmplx *A, const cmplx *w){
   int i, j;
   if(k&1){
     for(j=0; j<m/2; j++){
-      cmplx Ajv = A[j|(m/2)];
-      A[j|(m/2)] = A[j] - Ajv;
+      cmplx Ajv = A[j+(m/2)];
+      A[j+(m/2)] = A[j] - Ajv;
       A[j] += Ajv;
     }
     u <<= 1;
@@ -80,9 +80,9 @@ void ifft(int k, cmplx *A, const cmplx *w){
       int je;
       for(j = jh << i, je = j+v;j<je; j++){
         cmplx tmp0 = A[j];
-        cmplx tmp1 = A[j|v];
-        cmplx tmp2 = A[j|(v<<1)];
-        cmplx tmp3 = A[j|(v<<1)|v];
+        cmplx tmp1 = A[j+v];
+        cmplx tmp2 = A[j+2*v];
+        cmplx tmp3 = A[j+3*v];
 
         cmplx ttmp0 = tmp0 + tmp1;
         cmplx ttmp1 = tmp0 - tmp1;
@@ -90,9 +90,9 @@ void ifft(int k, cmplx *A, const cmplx *w){
         cmplx ttmp3 = I * (tmp2 - tmp3);
 
         A[j] = ttmp0 + ttmp2;
-        A[j|v] = wj * (ttmp1 + ttmp3);
-        A[j|(v<<1)] = wj2 * (ttmp0 - ttmp2);
-        A[j|(v<<1)|v] = wj3 * (ttmp1 - ttmp3);
+        A[j+v] = wj * (ttmp1 + ttmp3);
+        A[j+2*v] = wj2 * (ttmp0 - ttmp2);
+        A[j+3*v] = wj3 * (ttmp1 - ttmp3);
       }
     }
     u >>= 2;
@@ -100,8 +100,8 @@ void ifft(int k, cmplx *A, const cmplx *w){
   }
   if(k&1){
     for(j = 0;j<m/2; j++){
-      cmplx Ajv = A[j|(m/2)];
-      A[j|(m/2)] = A[j] - Ajv;
+      cmplx Ajv = A[j+(m/2)];
+      A[j+(m/2)] = A[j] - Ajv;
       A[j] += Ajv;
     }
   }
