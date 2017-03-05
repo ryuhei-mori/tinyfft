@@ -4,48 +4,108 @@
 
 typedef double complex cmplx;
 
+void genw(int i, int b, cmplx z, cmplx *w){
+  if(b == 0)
+    w[i] = z;
+  else {
+    genw(i, b>>1, z, w);
+    genw(i|b, b>>1, z*w[b], w);
+  }
+}
+
+void init(int k, cmplx *w){
+  int i, j;
+  const int m = 1<<k;
+  const double arg = -PI2/m;
+  for(i=1, j=m/4; j; i<<=1, j>>=1){
+    w[i] = cexp(I * (arg * j));
+  }
+  genw(0, m/4, 1, w);
+}
+
 void fft(int k, cmplx *A, const cmplx *w){
   const int m = 1 << k;
   int u = 1;
-  int v = m/2;
-  int i;
-  for(i=k;i>0;i--){
-    int jh;
-    for(jh=0;jh<u;jh++){
-      cmplx wj = w[jh];
-      int j, je;
-      for(j=jh<<i, je=j+v; j<je; j++){
-        cmplx Ajv = wj * A[j|v];
-        A[j|v] = A[j] - Ajv;
-        A[j] += Ajv;
-      }
+  int v = m/4;
+  int i, j;
+  if(k&1){
+    for(j=0; j<m/2; j++){
+      cmplx Ajv = A[j|(m/2)];
+      A[j|(m/2)] = A[j] - Ajv;
+      A[j] += Ajv;
     }
     u <<= 1;
     v >>= 1;
+  }
+  for(i=k&~1;i>0;i-=2){
+    int jh;
+    for(jh=0;jh<u;jh++){
+      cmplx wj = w[jh<<1];
+      cmplx wj2 = w[jh];
+      cmplx wj3 = wj2 * wj;
+      int je;
+      for(j = jh << i, je = j+v;j<je; j++){
+        cmplx tmp0 = A[j];
+        cmplx tmp1 = wj * A[j+v];
+        cmplx tmp2 = wj2 * A[j+2*v];
+        cmplx tmp3 = wj3 * A[j+3*v];
+
+        cmplx ttmp0 = tmp0 + tmp2;
+        cmplx ttmp2 = tmp0 - tmp2;
+        cmplx ttmp1 = tmp1 + tmp3;
+        cmplx ttmp3 = -I * (tmp1 - tmp3);
+
+        A[j] = ttmp0 + ttmp1;
+        A[j+v] = ttmp0 - ttmp1;
+        A[j+2*v] = ttmp2 + ttmp3;
+        A[j+3*v] = ttmp2 - ttmp3;
+      }
+    }
+    u <<= 2;
+    v >>= 2;
   }
 }
 
 void ifft(int k, cmplx *A, const cmplx *w){
   const int m = 1 << k;
-  int u = m/2;
+  int u = m/4;
   int v = 1;
-  int i;
-  for(i=1;i<=k;i++){
+  int i, j;
+  for(i=2;i<=k;i+=2){
     int jh;
     for(jh=0;jh<u;jh++){
-      cmplx wj = conj(w[jh]);
-      int j, je;
-      for(j=jh<<i, je=j+v; j<je; j++){
-        cmplx Ajv = A[j] - A[j|v];
-        A[j] += A[j|v];
-        A[j|v] = wj * Ajv;
+      cmplx wj = conj(w[jh<<1]);
+      cmplx wj2 = conj(w[jh]);
+      cmplx wj3 = wj2 * wj;
+      int je;
+      for(j = jh << i, je = j+v;j<je; j++){
+        cmplx tmp0 = A[j];
+        cmplx tmp1 = A[j|v];
+        cmplx tmp2 = A[j|(v<<1)];
+        cmplx tmp3 = A[j|(v<<1)|v];
+
+        cmplx ttmp0 = tmp0 + tmp1;
+        cmplx ttmp1 = tmp0 - tmp1;
+        cmplx ttmp2 = tmp2 + tmp3;
+        cmplx ttmp3 = I * (tmp2 - tmp3);
+
+        A[j] = ttmp0 + ttmp2;
+        A[j|v] = wj * (ttmp1 + ttmp3);
+        A[j|(v<<1)] = wj2 * (ttmp0 - ttmp2);
+        A[j|(v<<1)|v] = wj3 * (ttmp1 - ttmp3);
       }
     }
-    u >>= 1;
-    v <<= 1;
+    u >>= 2;
+    v <<= 2;
+  }
+  if(k&1){
+    for(j = 0;j<m/2; j++){
+      cmplx Ajv = A[j|(m/2)];
+      A[j|(m/2)] = A[j] - Ajv;
+      A[j] += Ajv;
+    }
   }
 }
-
 
 void convolver(int k, cmplx *A, const cmplx *w){
   int i;
@@ -66,25 +126,5 @@ void convolver(int k, cmplx *A, const cmplx *w){
   }
 
   ifft(k-1, A, w);
-}
-
-void genw(int i, int b, cmplx z, cmplx *w){
-  if(b == 0){
-    w[i] = z;
-  }
-  else {
-    genw(i, b>>1, z, w);
-    genw(i|b, b>>1, z*w[b], w);
-  }
-}
-
-void init(int k, cmplx *w){
-  int i, j;
-  const int m = 1<<k;
-  const double arg = -PI2/m;
-  for(i=1, j=m/4; j; i<<=1, j>>=1){
-    w[i] = cexp(I * (arg * j));
-  }
-  genw(0, m/4, 1, w);
 }
 

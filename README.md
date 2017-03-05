@@ -23,5 +23,6 @@ A complex vector x of length 2^k is inverse Fourier transformed by using a table
 Real vectors embedded in real and complex parts of x are convolved.
 
 ## Performance
-Empirically, for large vectors, Tiny FFT is 2x slower than FFTW3.
+For short vectors, Tiny FFT is much slower than FFTW3.
+Empirically, for large vectors (>= 2^19), Tiny FFT is faster than FFTW3 with FFTW_ESTIMATE but slower than FFTW3 with FFTW_MEASURE.
 
