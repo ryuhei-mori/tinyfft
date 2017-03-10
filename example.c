@@ -16,20 +16,20 @@ int main(){
     scanf("%d%d", &a, &b);
     A[i] = a + I*b;
   }
-  init(K, w);
+  tfft_init(K, w);
 
-  fft(K, A, w);
+  tfft_fft(K, A, w);
   for(i=0; i<2*n; i++){
     printf("%f %f\n", creal(A[i]), cimag(A[i]));
   }
-  ifft(K, A, w);
+  tfft_ifft(K, A, w);
   puts("");
   for(i=0; i<2*n; i++){
     A[i] /= m;
     printf("%f %f\n", creal(A[i]), cimag(A[i]));
   }
 
-  convolver(K, A, w);
+  tfft_convolver(K, A, w);
   for(i=0; i<=n; i++){
     printf("%d\n", (int) (creal(A[i])+0.5));
     printf("%d\n", (int) (cimag(A[i])+0.5));
