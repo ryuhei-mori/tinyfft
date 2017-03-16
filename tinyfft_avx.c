@@ -25,12 +25,18 @@ void tfft_init(int k, cmplx *w){
 }
 
 void complex_mul_avx(__m256d *ar, __m256d *ai, __m256d *br, __m256d *bi){
+/*
   __m256d arbr = _mm256_mul_pd(*ar, *br);
   __m256d aibi = _mm256_mul_pd(*ai, *bi);
   __m256d arbi = _mm256_mul_pd(*ar, *bi);
   __m256d aibr = _mm256_mul_pd(*ai, *br);
   *ar = _mm256_sub_pd(arbr, aibi);
   *ai = _mm256_add_pd(arbi, aibr);
+*/
+  __m256d aibi = _mm256_mul_pd(*ai, *bi);
+  __m256d aibr = _mm256_mul_pd(*ai, *br);
+  *ai = _mm256_fmadd_pd(*ar, *bi, aibr);
+  *ar = _mm256_fmsub_pd(*ar, *br, aibi);
 }
 
 void complex_mul(double *ar, double *ai, double br, double bi){
@@ -47,13 +53,23 @@ void tfft_fft_avx(int k, double *xr, double *xi,  const cmplx *w){
   int i, j;
 
   if(k&1){
-    for(j=0; j<m/2; j++){
+    for(j=0; j<m/2; j+=4){
+      __m256d ar = _mm256_load_pd(xr+j);
+      __m256d ai = _mm256_load_pd(xi+j);
+      __m256d br = _mm256_load_pd(xr+j+m/2);
+      __m256d bi = _mm256_load_pd(xi+j+m/2);
+      _mm256_store_pd(xr+j, _mm256_add_pd(ar, br));
+      _mm256_store_pd(xi+j, _mm256_add_pd(ai, bi));
+      _mm256_store_pd(xr+j+m/2, _mm256_sub_pd(ar, br));
+      _mm256_store_pd(xi+j+m/2, _mm256_sub_pd(ai, bi));
+/*
       double tmpr = xr[j+(m/2)];
       double tmpi = xi[j+(m/2)];
       xr[j+(m/2)] = xr[j] - tmpr;
       xi[j+(m/2)] = xi[j] - tmpi;
       xr[j] += tmpr;
       xi[j] += tmpi;
+*/
     }
     u <<= 1;
     v >>= 1;
@@ -389,6 +405,18 @@ void tfft_ifft_avx(int k, double *xr, double *xi,  const cmplx *w){
     v <<= 2;
   }
   if(k&1){
+    for(j=0; j<m/2; j+=4){
+      __m256d ar = _mm256_load_pd(xr+j);
+      __m256d ai = _mm256_load_pd(xi+j);
+      __m256d br = _mm256_load_pd(xr+j+m/2);
+      __m256d bi = _mm256_load_pd(xi+j+m/2);
+      _mm256_store_pd(xr+j, _mm256_add_pd(ar, br));
+      _mm256_store_pd(xi+j, _mm256_add_pd(ai, bi));
+      _mm256_store_pd(xr+j+m/2, _mm256_sub_pd(ar, br));
+      _mm256_store_pd(xi+j+m/2, _mm256_sub_pd(ai, bi));
+    }
+ 
+/*
     for(j=0; j<m/2; j++){
       double tmpr = xr[j+(m/2)];
       double tmpi = xi[j+(m/2)];
@@ -397,6 +425,7 @@ void tfft_ifft_avx(int k, double *xr, double *xi,  const cmplx *w){
       xr[j] += tmpr;
       xi[j] += tmpi;
     }
+*/
   }
 }
 
