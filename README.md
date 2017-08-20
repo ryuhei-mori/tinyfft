@@ -23,11 +23,11 @@ A complex vector `x` of length 2^k is inverse Fourier transformed by using a tab
 
     void tfft_convolver(int k, double complex *x, const double complex *w);
 
-Two real vectors embedded in real and complex parts of `x` are convolved.
+Two real vectors embedded in real and complex parts of `x` are cyclically convolved.
 
 ## List of provided functions in 'tinyfft_avx.c'
 
-    void tfft_init(int k, double complex *w);
+    void tfft_init_avx(int k, double complex *w);
 
 A table w of twiddle factors is initialized for FFT of length 2^k. The size of table `w` is 2^(k-1).
 
@@ -37,11 +37,11 @@ A complex vector `(xr, xi)` of length 2^k is Fourier transformed by using a tabl
 
     void tfft_ifft_avx(int k, double *xr, double *xi, const double complex *w);
 
-A complex vector `(xr, xi)`x of length 2^k is inverse Fourier transformed by using a table `w`. The elements of `xr` and `xi` are assumed to be placed in the bitreversal order.
+A complex vector `(xr, xi)` of length 2^k is inverse Fourier transformed by using a table `w`. The elements of `xr` and `xi` are assumed to be placed in the bitreversal order.
 
     void tfft_convolver_avx(int k, double *xr, double *xi, const double complex *w);
 
-Two real vectors `xr` and `xi` are convolved.
+Two real vectors `xr` and `xi` are cyclically convolved.
 
 ## Performance
 Empirically, for vectors of length between 2^17 and 2^20, Tiny FFT is faster than FFTW3 with FFTW_MEASURE.
