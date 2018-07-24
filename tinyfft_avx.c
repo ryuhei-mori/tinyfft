@@ -305,25 +305,27 @@ void tfft_ifft_avx(int k, double *xr, double *xi,  const cmplx *w){
 }
 
 void tfft_convolver_avx(int k, double *xr, double *xi, const cmplx *w){
-  int i;
+  int i, y;
   const int m = 1 << k;
 
   tfft_fft_avx(k, xr, xi, w);
   xi[0] = 4 * xr[0] * xi[0];
   xi[1] = 4 * xr[1] * xi[1];
   xr[0] = xr[1] = 0;
-  for(i = 2; i < m; i+=2){
-    int y = 1 << (sizeof(int)*8-1-__builtin_clz(i));
-    int j = i^(y-1);
-    double tmpr = xr[i] - xr[j];
-    double tmpi = xi[i] + xi[j];
-    xr[i] += xr[j];
-    xi[i] -= xi[j];
+  i = 2;
+  for(y = 2; y < m; y <<= 1){
+    for(; i < 2*y; i+=2){
+      int j = i^(y-1);
+      double tmpr = xr[i] - xr[j];
+      double tmpi = xi[i] + xi[j];
+      xr[i] += xr[j];
+      xi[i] -= xi[j];
 
-    complex_mul(xr+i, xi+i, tmpr, tmpi);
+      complex_mul(xr+i, xi+i, tmpr, tmpi);
 
-    xr[j] = -xr[i];
-    xi[j] = xi[i];
+      xr[j] = -xr[i];
+      xi[j] = xi[i];
+    }
   }
 
   for(i = 0; i < m; i+=2){
@@ -331,9 +333,9 @@ void tfft_convolver_avx(int k, double *xr, double *xi, const cmplx *w){
     double ttmpi = xi[i] + xi[i^1];
     double tmpr = xr[i] - xr[i^1];
     double tmpi = xi[i] - xi[i^1];
-    complex_mul(&tmpr, &tmpi, creal(w[i/2]), cimag(w[i/2]));
-    xr[i/2] = (ttmpr + tmpi) / (4*m);
-    xi[i/2] = (ttmpi - tmpr) / (4*m);
+    complex_mul(&tmpr, &tmpi, creal(w[i/2]), -cimag(w[i/2]));
+    xr[i/2] = (ttmpi + tmpr) / (4*m);
+    xi[i/2] = (-ttmpr + tmpi) / (4*m);
   }
 
   tfft_ifft_avx(k-1, xr, xi, w);

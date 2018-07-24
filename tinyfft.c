@@ -108,21 +108,23 @@ void tfft_ifft(int k, cmplx *A, const cmplx *w){
 }
 
 void tfft_convolver(int k, cmplx *A, const cmplx *w){
-  int i;
+  int i, y;
   const int m = 1 << k;
 
   tfft_fft(k, A, w);
   A[0] = 4 * creal(A[0]) * cimag(A[0]) * I;
   A[1] = 4 * creal(A[1]) * cimag(A[1]) * I;
-  for(i = 2; i < m; i+=2){
-    int y = 1 << (sizeof(int)*8-1-__builtin_clz(i));
-    int j = i^(y-1);
-    A[i] = (A[i] + conj(A[j]))*(A[i] - conj(A[j]));
-    A[j] = -conj(A[i]);
+  i = 2;
+  for(y = 2; y < m; y <<= 1){
+    for(; i < 2*y; i+=2){
+      int j = i^(y-1);
+      A[i] = (A[i] + conj(A[j]))*(A[i] - conj(A[j]));
+      A[j] = -conj(A[i]);
+    }
   }
 
   for(i = 0; i < m; i+=2){
-    A[i/2] = (A[i]+A[i^1] - (A[i]-A[i^1])*w[i/2]*I)/(4*m);
+    A[i/2] = (-(A[i]+A[i^1])*I + (A[i]-A[i^1])*conj(w[i/2]))/(4*m);
   }
 
   tfft_ifft(k-1, A, w);
